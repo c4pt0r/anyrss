@@ -79,6 +79,7 @@ func init() {
 			idChan <- globalId
 		}
 	}(globalId)
+	log.Info("initialize successfully")
 }
 
 // channel handler
@@ -208,6 +209,7 @@ func channelRssHandler(w http.ResponseWriter, r *http.Request) {
 		Link:   &gfeeds.Link{},
 		Author: &gfeeds.Author{},
 	}
+
 	var fs []*gfeeds.Item
 	for _, feed := range feeds {
 		fs = append(fs, feed.ToGorillaFeedItem())

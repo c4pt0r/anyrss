@@ -79,6 +79,28 @@ func (c *Channel) HasFeed(f *Feed) (bool, error) {
 	return found, err
 }
 
+func (c *Channel) RemoveFeed(f *Feed) error {
+	return db.Update(func(tx *bolt.Tx) error {
+		bucketName := append(channelBucketNamePrefix, []byte(c.Name)...)
+		b, err := tx.CreateBucketIfNotExists(bucketName)
+		if err != nil {
+			return err
+		}
+		key := fmt.Sprintf("item:id:%d", f.Id)
+		err = b.Delete([]byte(key))
+		if err != nil {
+			return err
+		}
+
+		hashKey := fmt.Sprintf("item:hash:%s", f.CalcHash())
+		err = b.Delete([]byte(hashKey))
+		if err != nil {
+			return err
+		}
+		return nil
+	})
+}
+
 func (c *Channel) GetFeeds(offset int, limit int) ([]*Feed, error) {
 	var feeds []*Feed
 	err := db.Update(func(tx *bolt.Tx) error {
