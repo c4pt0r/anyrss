@@ -2,11 +2,11 @@ package main
 
 import (
 	"bytes"
+	"encoding/binary"
 	"encoding/json"
 	"fmt"
 
 	"github.com/boltdb/bolt"
-	"github.com/ngaut/log"
 )
 
 type Channel struct {
@@ -43,9 +43,14 @@ func (c *Channel) AddFeed(f *Feed) error {
 		if err != nil {
 			return err
 		}
-		key := fmt.Sprintf("item:id:%d", f.Id)
+		keyBuf := new(bytes.Buffer)
+		keyBuf.Write([]byte("item:id:"))
+		err = binary.Write(keyBuf, binary.BigEndian, int64(-f.Id))
+		if err != nil {
+			return err
+		}
 		val, _ := json.Marshal(f)
-		err = b.Put([]byte(key), val)
+		err = b.Put(keyBuf.Bytes(), val)
 		if err != nil {
 			return err
 		}
@@ -139,7 +144,6 @@ func GetChannelByName(name string) (*Channel, error) {
 		}
 		var chn Channel
 		json.Unmarshal(bb, &chn)
-		log.Error(chn)
 		ret = &chn
 		return nil
 	})
